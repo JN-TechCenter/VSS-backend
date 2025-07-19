@@ -1,0 +1,22 @@
+# Maven 本地仓库
+target/
+.mvn/wrapper/maven-wrapper.jar
+# .mvn/wrapper/maven-wrapper.properties
+
+# IDE 文件
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+*.swp
+*.swo
