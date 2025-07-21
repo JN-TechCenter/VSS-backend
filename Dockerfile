@@ -1,11 +1,32 @@
-# 后端 Dockerfile - 使用预构建的 JAR 文件
+# 后端 Dockerfile - 多阶段构建
+FROM openjdk:17-jdk-slim AS builder
+
+# 设置工作目录
+WORKDIR /app
+
+# 复制构建文件
+COPY pom.xml .
+COPY mvnw .
+COPY mvnw.cmd .
+COPY .mvn .mvn
+
+# 下载依赖
+RUN ./mvnw dependency:go-offline -B
+
+# 复制源代码
+COPY src src
+
+# 构建应用
+RUN ./mvnw clean package -DskipTests
+
+# 运行阶段
 FROM openjdk:17-jdk-slim
 
 # 设置工作目录
 WORKDIR /app
 
-# 复制预构建的 JAR 文件
-COPY VSS-backend/target/vision-platform-backend-0.0.1-SNAPSHOT.jar app.jar
+# 复制构建好的 JAR 文件
+COPY --from=builder /app/target/*.jar app.jar
 
 # 设置运行时环境
 EXPOSE 3002
