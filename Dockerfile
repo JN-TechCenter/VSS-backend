@@ -1,40 +1,47 @@
-﻿# 后端 Dockerfile - 多阶段构建
+﻿
+# 后端 Dockerfile - 多阶段构建
 FROM openjdk:17-jdk-slim AS builder
 
 # 设置工作目录
 WORKDIR /app
 
+
+
+# 设置 apt 国内清华源
+RUN sed -i 's@http://deb.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list \
+ && sed -i 's@http://security.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list
+
+# 安装 maven（用清华源加速）
+RUN sed -i 's@http://deb.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list \
+ && sed -i 's@http://security.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list \
+ && apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
+
 # 复制构建文件
 COPY pom.xml .
-COPY mvnw .
-COPY mvnw.cmd .
-COPY .mvn .mvn
 
-# 配置Maven使用华为云镜像
-RUN mkdir -p ~/.m2 && \
-    echo '<?xml version="1.0" encoding="UTF-8"?>' > ~/.m2/settings.xml && \
-    echo '<settings>' >> ~/.m2/settings.xml && \
-    echo '  <mirrors>' >> ~/.m2/settings.xml && \
-    echo '    <mirror>' >> ~/.m2/settings.xml && \
-    echo '      <id>huaweicloud</id>' >> ~/.m2/settings.xml && \
-    echo '      <name>Huawei Cloud Maven</name>' >> ~/.m2/settings.xml && \
-    echo '      <url>https://repo.huaweicloud.com/repository/maven/</url>' >> ~/.m2/settings.xml && \
-    echo '      <mirrorOf>central</mirrorOf>' >> ~/.m2/settings.xml && \
-    echo '    </mirror>' >> ~/.m2/settings.xml && \
-    echo '  </mirrors>' >> ~/.m2/settings.xml && \
-    echo '</settings>' >> ~/.m2/settings.xml
+
+# 配置Maven使用清华源镜像
+RUN mkdir -p /root/.m2
+COPY settings.xml /root/.m2/settings.xml
+
 
 # 下载依赖
-RUN ./mvnw dependency:go-offline -B
+RUN mvn dependency:go-offline -B
 
 # 复制源代码
 COPY src src
 
+
 # 构建应用
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
+
 
 # 运行阶段
 FROM openjdk:17-jdk-slim
+
+# 设置 apt 国内清华源
+RUN sed -i 's@http://deb.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list \
+ && sed -i 's@http://security.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list
 
 # 设置工作目录
 WORKDIR /app
