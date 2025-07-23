@@ -18,8 +18,4 @@ public class TestController {
         return "Test endpoint working!";
     }
 
-    @GetMapping("/health")
-    public String health() {
-        return "Backend is healthy!";
-    }
 }
