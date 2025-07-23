@@ -7,9 +7,11 @@ WORKDIR /app
 
 
 
-# 设置 apt 国内清华源
+
+# 设置 apt 国内清华源并安装 curl
 RUN sed -i 's@http://deb.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list \
- && sed -i 's@http://security.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list
+ && sed -i 's@http://security.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list \
+ && apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # 安装 maven（用清华源加速）
 RUN sed -i 's@http://deb.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list \
@@ -39,9 +41,11 @@ RUN mvn clean package -DskipTests
 # 运行阶段
 FROM openjdk:17-jdk-slim
 
-# 设置 apt 国内清华源
+
+# 设置 apt 国内清华源并安装 curl
 RUN sed -i 's@http://deb.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list \
- && sed -i 's@http://security.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list
+ && sed -i 's@http://security.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list \
+ && apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # 设置工作目录
 WORKDIR /app
