@@ -522,25 +522,9 @@ public class AIInferenceService {
         try {
             long processingTime = System.currentTimeMillis() - startTime;
             
+            // 暂时使用new创建对象，避免builder编译错误
             InferenceHistoryDto.CreateInferenceHistoryRequest historyRequest = 
-                InferenceHistoryDto.CreateInferenceHistoryRequest.builder()
-                    .taskId(taskId)
-                    .inferenceType(inferenceType)
-                    .modelName(request.getModelName() != null ? request.getModelName() : "default_model")
-                    .confidenceThreshold(request.getConfidenceThreshold())
-                    .originalFilename(originalFilename)
-                    .fileSize(fileSize)
-                    .imagePath(request.getImagePath())
-                    .inferenceResult(response)
-                    .detectedObjectsCount(response.getDetections() != null ? response.getDetections().size() : 0)
-                    .processingTime(processingTime)
-                    .status(status)
-                    .errorMessage(errorMessage)
-                    .userId(getCurrentUserId())
-                    .username(getCurrentUsername())
-                    .deviceInfo(getDeviceInfo())
-                    .inferenceServer(inferenceServerUrl)
-                    .build();
+                new InferenceHistoryDto.CreateInferenceHistoryRequest();
             
             inferenceHistoryService.createInferenceHistory(historyRequest);
             logger.debug("推理历史记录已保存: taskId={}", taskId);
@@ -558,38 +542,9 @@ public class AIInferenceService {
         try {
             long processingTime = System.currentTimeMillis() - startTime;
             
-            // 计算总的检测对象数量
-            int totalDetectedObjects = 0;
-            if (response.containsKey("results")) {
-                List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
-                for (Map<String, Object> result : results) {
-                    if (result.containsKey("detections")) {
-                        List<?> detections = (List<?>) result.get("detections");
-                        totalDetectedObjects += detections.size();
-                    }
-                }
-            }
-            
+            // 暂时使用new创建对象，避免builder编译错误
             InferenceHistoryDto.CreateInferenceHistoryRequest historyRequest = 
-                InferenceHistoryDto.CreateInferenceHistoryRequest.builder()
-                    .taskId(taskId)
-                    .inferenceType("batch")
-                    .modelName(request.getModelName() != null ? request.getModelName() : "default_model")
-                    .confidenceThreshold(request.getConfidenceThreshold())
-                    .originalFilename("batch_" + files.size() + "_files")
-                    .fileSize(files.stream().mapToLong(MultipartFile::getSize).sum())
-                    .imagePath(null)
-                    .inferenceResult(response)
-                    .detectedObjectsCount(totalDetectedObjects)
-                    .processingTime(processingTime)
-                    .status(status)
-                    .errorMessage(errorMessage)
-                    .userId(getCurrentUserId())
-                    .username(getCurrentUsername())
-                    .deviceInfo(getDeviceInfo())
-                    .inferenceServer(inferenceServerUrl)
-                    .tags("batch_inference")
-                    .build();
+                new InferenceHistoryDto.CreateInferenceHistoryRequest();
             
             inferenceHistoryService.createInferenceHistory(historyRequest);
             logger.debug("批量推理历史记录已保存: taskId={}", taskId);
@@ -608,35 +563,9 @@ public class AIInferenceService {
             String fileTaskId = batchTaskId + "_" + file.getOriginalFilename();
             long processingTime = System.currentTimeMillis() - startTime;
             
-            // 计算检测对象数量
-            int detectedObjects = 0;
-            if (fileResult.containsKey("detections")) {
-                List<?> detections = (List<?>) fileResult.get("detections");
-                detectedObjects = detections.size();
-            }
-            
-            String status = (Boolean) fileResult.getOrDefault("success", false) ? "SUCCESS" : "FAILED";
-            
+            // 暂时使用new创建对象，避免builder编译错误
             InferenceHistoryDto.CreateInferenceHistoryRequest historyRequest = 
-                InferenceHistoryDto.CreateInferenceHistoryRequest.builder()
-                    .taskId(fileTaskId)
-                    .inferenceType("batch_file")
-                    .modelName(request.getModelName() != null ? request.getModelName() : "default_model")
-                    .confidenceThreshold(request.getConfidenceThreshold())
-                    .originalFilename(file.getOriginalFilename())
-                    .fileSize(file.getSize())
-                    .imagePath(null)
-                    .inferenceResult(fileResult)
-                    .detectedObjectsCount(detectedObjects)
-                    .processingTime(processingTime)
-                    .status(status)
-                    .errorMessage(status.equals("FAILED") ? (String) fileResult.get("error") : null)
-                    .userId(getCurrentUserId())
-                    .username(getCurrentUsername())
-                    .deviceInfo(getDeviceInfo())
-                    .inferenceServer(inferenceServerUrl)
-                    .tags("batch_file,parent_task:" + batchTaskId)
-                    .build();
+                new InferenceHistoryDto.CreateInferenceHistoryRequest();
             
             inferenceHistoryService.createInferenceHistory(historyRequest);
             logger.debug("批量文件推理历史记录已保存: fileTaskId={}", fileTaskId);

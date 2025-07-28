@@ -339,7 +339,7 @@ public class UserController {
         response.put("lastLoginTime", user.getLastLoginTime());
         response.put("createdAt", user.getCreatedAt());
         response.put("updatedAt", user.getUpdatedAt());
-        response.put("isAccountLocked", user.isAccountLocked());
+        response.put("isAccountLocked", user.checkAccountLocked());
         return response;
     }
 
