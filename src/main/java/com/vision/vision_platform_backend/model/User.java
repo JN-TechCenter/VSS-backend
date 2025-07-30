@@ -1,17 +1,18 @@
 package com.vision.vision_platform_backend.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.hibernate.annotations.GenericGenerator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "users")
+@Data
 @EntityListeners(AuditingEntityListener.class)
 public class User {
     @Id
@@ -20,13 +21,13 @@ public class User {
     @Column(columnDefinition = "UUID")
     private UUID id;
 
-    @Column(name = "username", unique = true, nullable = false)
+    @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(name = "password", nullable = false)
+    @Column(nullable = false)
     private String password;
 
-    @Column(name = "email", unique = true, nullable = false)
+    @Column(unique = true, nullable = false)
     private String email;
 
     @Column(name = "full_name")
@@ -104,17 +105,13 @@ public class User {
     }
 
     // 检查账户是否被锁定
-    @Transient
-    @JsonIgnore
-    public boolean checkAccountLocked() {
+    public boolean isAccountLocked() {
         return accountLockedUntil != null && accountLockedUntil.isAfter(LocalDateTime.now());
     }
 
     // 检查账户是否启用
-    @Transient
-    @JsonIgnore
-    public boolean checkEnabled() {
-        return status == UserStatus.ACTIVE && !checkAccountLocked();
+    public boolean isEnabled() {
+        return status == UserStatus.ACTIVE && !isAccountLocked();
     }
 
     // 重置登录尝试次数
@@ -132,7 +129,7 @@ public class User {
         }
     }
 
-    // Getter methods
+    // 手动添加getter方法（确保编译通过）
     public UUID getId() {
         return id;
     }
@@ -197,7 +194,7 @@ public class User {
         return updatedBy;
     }
 
-    // Setter methods
+    // 手动添加setter方法
     public void setId(UUID id) {
         this.id = id;
     }

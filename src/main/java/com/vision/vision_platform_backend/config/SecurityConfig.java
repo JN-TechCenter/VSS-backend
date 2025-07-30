@@ -128,12 +128,10 @@ public class SecurityConfig {
             
             // 配置请求授权
             .authorizeHttpRequests(authz -> authz
-                // 首先配置最具体的公开端点（注册和登录必须在前面）
-                .requestMatchers("/api/users/register").permitAll()
-                .requestMatchers("/api/users/login").permitAll()
-                
-                // 其他公开访问的端点
+                // 公开访问的端点
                 .requestMatchers(
+                    "/api/users/register",
+                    "/api/users/login",
                     "/api/users/roles",
                     "/api/devices/*/heartbeat",
                     "/h2-console/**",
@@ -145,13 +143,7 @@ public class SecurityConfig {
                     "/actuator/info"
                 ).permitAll()
                 
-                // 所有认证用户可访问的端点（具体路径）
-                .requestMatchers("/api/users/profile").authenticated()
-                .requestMatchers("/api/users/change-password").authenticated()
-                .requestMatchers("/api/dashboard/**").authenticated()
-                .requestMatchers("/api/analytics/**").authenticated()
-                
-                // 管理员权限端点（具体路径）
+                // 管理员权限端点
                 .requestMatchers(
                     "/api/users/search",
                     "/api/users/{id}",
@@ -161,14 +153,19 @@ public class SecurityConfig {
                     "/api/admin/**"
                 ).hasRole("ADMIN")
                 
-                // 管理员权限端点（/api/users 基础路径，放在最后避免覆盖具体路径）
-                .requestMatchers("/api/users").hasRole("ADMIN")
-                
                 // 管理员和操作员权限端点
                 .requestMatchers(
                     "/api/devices/**",
                     "/api/streams/**"
                 ).hasAnyRole("ADMIN", "OPERATOR")
+                
+                // 所有认证用户可访问的端点
+                .requestMatchers(
+                    "/api/users/profile",
+                    "/api/users/change-password",
+                    "/api/dashboard/**",
+                    "/api/analytics/**"
+                ).authenticated()
                 
                 // 其他所有请求都需要认证
                 .anyRequest().authenticated()

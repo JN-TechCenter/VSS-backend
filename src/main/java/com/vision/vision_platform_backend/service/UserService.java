@@ -69,7 +69,7 @@ public class UserService {
             throw new RuntimeException("账户已被禁用");
         }
 
-        if (user.checkAccountLocked()) {
+        if (user.isAccountLocked()) {
             throw new RuntimeException("账户已被锁定，请稍后再试");
         }
 
@@ -95,9 +95,7 @@ public class UserService {
     // 检查用户是否启用
     public boolean isUserEnabledByUsername(String username) {
         Optional<User> userOpt = userRepository.findByUsername(username);
-        // 暂时使用status判断，避免isEnabled方法找不到的编译错误
-        return userOpt.map(user -> user.getStatus() == User.UserStatus.ACTIVE).orElse(false);
-        // return userOpt.map(User::isEnabled).orElse(false);
+        return userOpt.map(User::isEnabled).orElse(false);
     }
 
     // 获取用户信息

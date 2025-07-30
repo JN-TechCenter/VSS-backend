@@ -63,17 +63,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     new UsernamePasswordAuthenticationToken(username, null, authorities);
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 
-                // 设置认证信息到SecurityContext
+                // 将用户ID添加到认证详情中
                 SecurityContextHolder.getContext().setAuthentication(authToken);
                 
                 // 可以通过request attribute传递用户ID
                 request.setAttribute("userId", userId);
                 request.setAttribute("userRole", role);
-                
-                // 添加调试日志
-                logger.info("JWT认证成功: 用户=" + username + ", 角色=" + role + ", 权限=" + authorities);
-            } else {
-                logger.warn("JWT token验证失败: " + username);
             }
         }
 

@@ -103,17 +103,14 @@ public class VideoStream {
     }
     
     // 便捷方法
-    @Transient
     public boolean isActive() {
         return status == StreamStatus.ACTIVE;
     }
-
-    @Transient
+    
     public boolean isInactive() {
         return status == StreamStatus.INACTIVE;
     }
-
-    @Transient
+    
     public boolean hasError() {
         return status == StreamStatus.ERROR;
     }

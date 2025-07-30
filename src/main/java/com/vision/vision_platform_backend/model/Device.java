@@ -134,12 +134,10 @@ public class Device {
         this.updatedAt = LocalDateTime.now();
     }
     
-    @Transient
     public boolean isOnline() {
         return this.status == DeviceStatus.ONLINE;
     }
     
-    @Transient
     public boolean isOffline() {
         return this.status == DeviceStatus.OFFLINE;
     }
