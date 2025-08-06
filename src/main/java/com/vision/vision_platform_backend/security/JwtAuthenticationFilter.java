@@ -28,9 +28,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         
         String requestPath = request.getRequestURI();
+        String method = request.getMethod();
+        
+        logger.info("=== JWT Filter Debug ===");
+        logger.info("Request Path: " + requestPath);
+        logger.info("Request Method: " + method);
+        logger.info("Should Skip: " + shouldSkipAuthentication(requestPath));
         
         // 跳过不需要认证的路径
         if (shouldSkipAuthentication(requestPath)) {
+            logger.info("Skipping authentication for: " + requestPath);
             filterChain.doFilter(request, response);
             return;
         }
