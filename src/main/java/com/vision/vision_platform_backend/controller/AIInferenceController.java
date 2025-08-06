@@ -13,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * AI推理控制器
@@ -256,7 +255,7 @@ public class AIInferenceController {
      * 获取推理历史记录详情
      */
     @GetMapping("/history/{id}")
-    public ResponseEntity<InferenceHistoryDto.InferenceHistoryResponse> getInferenceHistory(@PathVariable UUID id) {
+    public ResponseEntity<InferenceHistoryDto.InferenceHistoryResponse> getInferenceHistory(@PathVariable Long id) {
         try {
             Optional<InferenceHistoryDto.InferenceHistoryResponse> historyOpt = 
                 inferenceHistoryService.getInferenceHistoryById(id);
@@ -293,7 +292,7 @@ public class AIInferenceController {
      * 删除推理历史记录
      */
     @DeleteMapping("/history/{id}")
-    public ResponseEntity<Map<String, String>> deleteInferenceHistory(@PathVariable UUID id) {
+    public ResponseEntity<Map<String, String>> deleteInferenceHistory(@PathVariable Long id) {
         try {
             inferenceHistoryService.deleteInferenceHistory(id);
             return ResponseEntity.ok(Map.of("message", "推理历史记录删除成功"));
@@ -324,7 +323,7 @@ public class AIInferenceController {
      */
     @GetMapping("/history/stats")
     public ResponseEntity<InferenceHistoryDto.InferenceHistoryStats> getInferenceHistoryStats(
-            @RequestParam(value = "userId", required = false) UUID userId,
+            @RequestParam(value = "userId", required = false) Long userId,
             @RequestParam(value = "startTime", required = false) String startTime,
             @RequestParam(value = "endTime", required = false) String endTime) {
         try {
@@ -366,7 +365,7 @@ public class AIInferenceController {
      */
     @PostMapping("/history/{id}/favorite")
     public ResponseEntity<Map<String, String>> toggleFavoriteInferenceHistory(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @RequestParam(value = "favorite", defaultValue = "true") Boolean favorite) {
         try {
             InferenceHistoryDto.UpdateInferenceHistoryRequest request = 
@@ -392,7 +391,7 @@ public class AIInferenceController {
      */
     @PostMapping("/history/{id}/rating")
     public ResponseEntity<Map<String, String>> rateInferenceHistory(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @RequestParam("rating") Integer rating) {
         try {
             if (rating < 1 || rating > 5) {
@@ -421,7 +420,7 @@ public class AIInferenceController {
      */
     @PostMapping("/history/{id}/notes")
     public ResponseEntity<Map<String, String>> addNotesToInferenceHistory(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @RequestParam("notes") String notes) {
         try {
             InferenceHistoryDto.UpdateInferenceHistoryRequest request = 

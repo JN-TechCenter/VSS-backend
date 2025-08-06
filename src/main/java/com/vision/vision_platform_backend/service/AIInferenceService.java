@@ -22,14 +22,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * AI推理服务
  * 负责与MindSpore推理服务器通信
  */
 @Service
-@RequiredArgsConstructor
 public class AIInferenceService {
 
     private static final Logger logger = LoggerFactory.getLogger(AIInferenceService.class);
@@ -93,7 +91,7 @@ public class AIInferenceService {
      * 单张图片推理
      */
     public AIInferenceDto.InferenceResponse inference(AIInferenceDto.InferenceRequest request) {
-        String taskId = UUID.randomUUID().toString();
+        String taskId = "task_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 10000);
         long startTime = System.currentTimeMillis();
         
         try {
@@ -153,7 +151,7 @@ public class AIInferenceService {
      * 单张图片推理（带文件上传）
      */
     public AIInferenceDto.InferenceResponse inferSingle(MultipartFile file, AIInferenceDto.InferenceRequest request) {
-        String taskId = UUID.randomUUID().toString();
+        String taskId = "task_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 10000);
         long startTime = System.currentTimeMillis();
         
         try {
@@ -200,7 +198,7 @@ public class AIInferenceService {
      * 批量图片推理（带文件上传）
      */
     public Map<String, Object> inferBatch(List<MultipartFile> files, AIInferenceDto.BatchInferenceRequest request) {
-        String taskId = UUID.randomUUID().toString();
+        String taskId = "task_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 10000);
         long startTime = System.currentTimeMillis();
         
         try {
@@ -530,7 +528,7 @@ public class AIInferenceService {
                     .confidenceThreshold(request.getConfidenceThreshold())
                     .originalFilename(originalFilename)
                     .fileSize(fileSize)
-                    .imagePath(request.getImagePath())
+                    .imagePath(null) // 单张推理请求中没有imagePath字段
                     .inferenceResult(response)
                     .detectedObjectsCount(response.getDetections() != null ? response.getDetections().size() : 0)
                     .processingTime(processingTime)
@@ -659,23 +657,23 @@ public class AIInferenceService {
     }
 
     /**
-     * 获取当前认证用户的UUID
+     * 获取当前认证用户的ID
      */
-    private UUID getCurrentUserId() {
+    private Long getCurrentUserId() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.isAuthenticated() && 
                 !"anonymousUser".equals(authentication.getPrincipal())) {
                 String username = authentication.getName();
-                // 这里可以通过用户名查询用户ID，暂时使用一个默认UUID
-                // 在实际应用中，应该通过UserService根据用户名获取用户UUID
-                return UUID.fromString("7a7d1c65-b8bc-4fd5-af27-5346144991a5"); // 临时使用测试用户ID
+                // 这里可以通过用户名查询用户ID，暂时使用一个默认ID
+                // 在实际应用中，应该通过UserService根据用户名获取用户ID
+                return 1L; // 临时使用测试用户ID
             }
         } catch (Exception e) {
             logger.warn("获取当前用户ID失败: {}", e.getMessage());
         }
-        // 如果无法获取认证用户，返回默认UUID
-        return UUID.fromString("7a7d1c65-b8bc-4fd5-af27-5346144991a5");
+        // 如果无法获取认证用户，返回默认ID
+        return 1L;
     }
 
     /**

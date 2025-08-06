@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * AI推理历史记录实体
@@ -102,7 +101,7 @@ public class InferenceHistory {
      * 用户ID（执行推理的用户）
      */
     @Column(name = "user_id")
-    private UUID userId;
+    private Long userId;
 
     /**
      * 用户名

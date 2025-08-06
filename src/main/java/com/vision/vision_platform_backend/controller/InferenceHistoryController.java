@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * 推理历史记录控制器
@@ -52,7 +51,7 @@ public class InferenceHistoryController {
      * 根据ID获取推理历史记录
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> getInferenceHistoryById(@PathVariable UUID id) {
+    public ResponseEntity<?> getInferenceHistoryById(@PathVariable Long id) {
         try {
             return inferenceHistoryService.getInferenceHistoryById(id)
                     .map(history -> ResponseEntity.ok(Map.of(
@@ -128,7 +127,7 @@ public class InferenceHistoryController {
             @RequestParam(required = false) String inferenceType,
             @RequestParam(required = false) String modelName,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) UUID userId,
+            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
@@ -174,7 +173,7 @@ public class InferenceHistoryController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<?> updateInferenceHistory(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @RequestBody InferenceHistoryDto.UpdateInferenceHistoryRequest request) {
         try {
             InferenceHistoryDto.InferenceHistoryResponse response = 
@@ -197,7 +196,7 @@ public class InferenceHistoryController {
      * 删除推理历史记录
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteInferenceHistory(@PathVariable UUID id) {
+    public ResponseEntity<?> deleteInferenceHistory(@PathVariable Long id) {
         try {
             inferenceHistoryService.deleteInferenceHistory(id);
             return ResponseEntity.ok(Map.of(
@@ -217,7 +216,7 @@ public class InferenceHistoryController {
      * 批量删除推理历史记录
      */
     @DeleteMapping("/batch")
-    public ResponseEntity<?> batchDeleteInferenceHistory(@RequestBody List<UUID> ids) {
+    public ResponseEntity<?> batchDeleteInferenceHistory(@RequestBody List<Long> ids) {
         try {
             inferenceHistoryService.batchDeleteInferenceHistory(ids);
             return ResponseEntity.ok(Map.of(
@@ -238,7 +237,7 @@ public class InferenceHistoryController {
      */
     @GetMapping("/stats")
     public ResponseEntity<?> getInferenceHistoryStats(
-            @RequestParam(required = false) UUID userId,
+            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
         try {
@@ -283,7 +282,7 @@ public class InferenceHistoryController {
      * 标记为收藏/取消收藏
      */
     @PutMapping("/{id}/favorite")
-    public ResponseEntity<?> toggleFavorite(@PathVariable UUID id, @RequestParam Boolean favorite) {
+    public ResponseEntity<?> toggleFavorite(@PathVariable Long id, @RequestParam Boolean favorite) {
         try {
             InferenceHistoryDto.UpdateInferenceHistoryRequest request = 
                     InferenceHistoryDto.UpdateInferenceHistoryRequest.builder()
@@ -311,7 +310,7 @@ public class InferenceHistoryController {
      * 评分推理结果
      */
     @PutMapping("/{id}/rating")
-    public ResponseEntity<?> rateInferenceResult(@PathVariable UUID id, @RequestParam Integer rating) {
+    public ResponseEntity<?> rateInferenceResult(@PathVariable Long id, @RequestParam Integer rating) {
         try {
             if (rating < 1 || rating > 5) {
                 return ResponseEntity.badRequest().body(Map.of(
@@ -346,7 +345,7 @@ public class InferenceHistoryController {
      * 添加备注
      */
     @PutMapping("/{id}/notes")
-    public ResponseEntity<?> addNotes(@PathVariable UUID id, @RequestBody Map<String, String> request) {
+    public ResponseEntity<?> addNotes(@PathVariable Long id, @RequestBody Map<String, String> request) {
         try {
             String notes = request.get("notes");
             
@@ -378,7 +377,7 @@ public class InferenceHistoryController {
     @GetMapping("/recent")
     public ResponseEntity<?> getRecentInferenceHistory(
             @RequestParam(defaultValue = "10") Integer limit,
-            @RequestParam(required = false) UUID userId) {
+            @RequestParam(required = false) Long userId) {
         try {
             InferenceHistoryDto.SearchInferenceHistoryRequest request = 
                     InferenceHistoryDto.SearchInferenceHistoryRequest.builder()

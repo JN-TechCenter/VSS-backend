@@ -10,7 +10,6 @@ import lombok.Builder;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * 推理历史记录相关DTO
@@ -38,7 +37,7 @@ public class InferenceHistoryDto {
         private Long processingTime;
         private String status;
         private String errorMessage;
-        private UUID userId;
+        private Long userId;
         private String username;
         private String deviceInfo;
         private String inferenceServer;
@@ -75,7 +74,7 @@ public class InferenceHistoryDto {
         private Long processingTime;
         private String status;
         private String errorMessage;
-        private UUID userId;
+        private Long userId;
         private String username;
         private String deviceInfo;
         private String inferenceServer;
@@ -114,7 +113,7 @@ public class InferenceHistoryDto {
         private String inferenceType;
         private String modelName;
         private String status;
-        private UUID userId;
+        private Long userId;
         private String username;
         
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -221,7 +220,7 @@ public class InferenceHistoryDto {
     @AllArgsConstructor
     @Builder
     public static class BatchOperationRequest {
-        private List<UUID> ids;
+        private List<Long> ids;
         private String operation; // delete, favorite, unfavorite, rate
         private Integer rating; // 用于批量评分
         private String tags; // 用于批量添加标签
@@ -235,7 +234,7 @@ public class InferenceHistoryDto {
     @AllArgsConstructor
     @Builder
     public static class ExportInferenceHistoryRequest {
-        private List<UUID> ids; // 如果为空，则导出所有符合条件的记录
+        private List<Long> ids; // 如果为空，则导出所有符合条件的记录
         private String format; // json, csv, excel
         private SearchInferenceHistoryRequest searchCriteria;
         private Boolean includeImages; // 是否包含图片文件

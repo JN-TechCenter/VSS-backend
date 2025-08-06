@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * 推理历史记录Repository
@@ -25,9 +24,24 @@ public interface InferenceHistoryRepository extends JpaRepository<InferenceHisto
     Optional<InferenceHistory> findByTaskId(String taskId);
 
     /**
+     * 根据ID查找（未删除）
+     */
+    Optional<InferenceHistory> findByIdAndIsDeletedFalse(Long id);
+
+    /**
+     * 根据任务ID查找（未删除）
+     */
+    Optional<InferenceHistory> findByTaskIdAndIsDeletedFalse(String taskId);
+
+    /**
+     * 根据ID列表查找（未删除）
+     */
+    List<InferenceHistory> findByIdInAndIsDeletedFalse(List<Long> ids);
+
+    /**
      * 根据用户ID查找推理历史（分页）
      */
-    Page<InferenceHistory> findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(UUID userId, Pageable pageable);
+    Page<InferenceHistory> findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
     /**
      * 根据用户名查找推理历史（分页）
@@ -38,6 +52,11 @@ public interface InferenceHistoryRepository extends JpaRepository<InferenceHisto
      * 查找所有未删除的推理历史（分页）
      */
     Page<InferenceHistory> findByIsDeletedFalseOrderByCreatedAtDesc(Pageable pageable);
+
+    /**
+     * 查找所有未删除的推理历史（分页，简化版）
+     */
+    Page<InferenceHistory> findByIsDeletedFalse(Pageable pageable);
 
     /**
      * 根据推理类型查找
@@ -69,7 +88,7 @@ public interface InferenceHistoryRepository extends JpaRepository<InferenceHisto
      * 根据用户查找收藏的推理记录
      */
     Page<InferenceHistory> findByUserIdAndIsFavoriteTrueAndIsDeletedFalseOrderByCreatedAtDesc(
-            UUID userId, Pageable pageable);
+            Long userId, Pageable pageable);
 
     /**
      * 复合搜索查询
@@ -94,9 +113,43 @@ public interface InferenceHistoryRepository extends JpaRepository<InferenceHisto
             @Param("inferenceType") String inferenceType,
             @Param("modelName") String modelName,
             @Param("status") String status,
-            @Param("userId") UUID userId,
+            @Param("userId") Long userId,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
+            Pageable pageable);
+
+    /**
+     * 复杂条件搜索查询
+     */
+    @Query("SELECT ih FROM InferenceHistory ih WHERE " +
+           "ih.isDeleted = false AND " +
+           "(:keyword IS NULL OR " +
+           "ih.originalFilename LIKE %:keyword% OR " +
+           "ih.modelName LIKE %:keyword% OR " +
+           "ih.username LIKE %:keyword% OR " +
+           "ih.tags LIKE %:keyword% OR " +
+           "ih.notes LIKE %:keyword%) AND " +
+           "(:inferenceType IS NULL OR ih.inferenceType = :inferenceType) AND " +
+           "(:modelName IS NULL OR ih.modelName = :modelName) AND " +
+           "(:status IS NULL OR ih.status = :status) AND " +
+           "(:userId IS NULL OR ih.userId = :userId) AND " +
+           "(:username IS NULL OR ih.username = :username) AND " +
+           "(:startTime IS NULL OR ih.createdAt >= :startTime) AND " +
+           "(:endTime IS NULL OR ih.createdAt <= :endTime) AND " +
+           "(:isFavorite IS NULL OR ih.isFavorite = :isFavorite) AND " +
+           "(:minRating IS NULL OR ih.resultRating >= :minRating) " +
+           "ORDER BY ih.createdAt DESC")
+    Page<InferenceHistory> searchWithComplexCriteria(
+            @Param("keyword") String keyword,
+            @Param("inferenceType") String inferenceType,
+            @Param("modelName") String modelName,
+            @Param("status") String status,
+            @Param("userId") Long userId,
+            @Param("username") String username,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime,
+            @Param("isFavorite") Boolean isFavorite,
+            @Param("minRating") Integer minRating,
             Pageable pageable);
 
     /**
@@ -117,7 +170,7 @@ public interface InferenceHistoryRepository extends JpaRepository<InferenceHisto
 
     // 统计用户推理次数
     @Query("SELECT COUNT(ih) FROM InferenceHistory ih WHERE ih.isDeleted = false AND ih.userId = :userId")
-    Long countInferencesByUser(@Param("userId") UUID userId);
+    Long countInferencesByUser(@Param("userId") Long userId);
 
     // 统计各模型使用次数
     @Query("SELECT ih.modelName, COUNT(ih) FROM InferenceHistory ih WHERE ih.isDeleted = false GROUP BY ih.modelName")
@@ -141,6 +194,47 @@ public interface InferenceHistoryRepository extends JpaRepository<InferenceHisto
     @Query("SELECT AVG(ih.detectedObjectsCount) FROM InferenceHistory ih WHERE ih.isDeleted = false AND ih.status = 'SUCCESS'")
     Double getAverageDetectedObjectsCount();
 
+    // 带参数的统计方法
+    @Query("SELECT COUNT(ih) FROM InferenceHistory ih WHERE " +
+           "(:userId IS NULL OR ih.userId = :userId) " +
+           "AND ih.createdAt BETWEEN :startTime AND :endTime " +
+           "AND ih.isDeleted = false")
+    Long countTotalInferences(@Param("userId") Long userId, 
+                             @Param("startTime") LocalDateTime startTime, 
+                             @Param("endTime") LocalDateTime endTime);
+
+    @Query("SELECT COUNT(ih) FROM InferenceHistory ih WHERE " +
+           "(:userId IS NULL OR ih.userId = :userId) " +
+           "AND ih.createdAt BETWEEN :startTime AND :endTime " +
+           "AND ih.isDeleted = false AND ih.status = 'SUCCESS'")
+    Long countSuccessfulInferences(@Param("userId") Long userId, 
+                                  @Param("startTime") LocalDateTime startTime, 
+                                  @Param("endTime") LocalDateTime endTime);
+
+    @Query("SELECT COUNT(ih) FROM InferenceHistory ih WHERE " +
+           "(:userId IS NULL OR ih.userId = :userId) " +
+           "AND ih.createdAt BETWEEN :startTime AND :endTime " +
+           "AND ih.isDeleted = false AND ih.status = 'FAILED'")
+    Long countFailedInferences(@Param("userId") Long userId, 
+                              @Param("startTime") LocalDateTime startTime, 
+                              @Param("endTime") LocalDateTime endTime);
+
+    @Query("SELECT AVG(ih.processingTime) FROM InferenceHistory ih WHERE " +
+           "(:userId IS NULL OR ih.userId = :userId) " +
+           "AND ih.createdAt BETWEEN :startTime AND :endTime " +
+           "AND ih.isDeleted = false AND ih.status = 'SUCCESS'")
+    Double getAverageProcessingTime(@Param("userId") Long userId, 
+                                   @Param("startTime") LocalDateTime startTime, 
+                                   @Param("endTime") LocalDateTime endTime);
+
+    @Query("SELECT AVG(ih.detectedObjectsCount) FROM InferenceHistory ih WHERE " +
+           "(:userId IS NULL OR ih.userId = :userId) " +
+           "AND ih.createdAt BETWEEN :startTime AND :endTime " +
+           "AND ih.isDeleted = false AND ih.status = 'SUCCESS'")
+    Double getAverageDetectedObjects(@Param("userId") Long userId, 
+                                    @Param("startTime") LocalDateTime startTime, 
+                                    @Param("endTime") LocalDateTime endTime);
+
     // 查找最近的推理记录
     @Query("SELECT ih FROM InferenceHistory ih WHERE ih.isDeleted = false ORDER BY ih.createdAt DESC")
     List<InferenceHistory> findRecentInferences(Pageable pageable);
@@ -162,13 +256,52 @@ public interface InferenceHistoryRepository extends JpaRepository<InferenceHisto
 
     // 软删除（批量）
     @Query("UPDATE InferenceHistory ih SET ih.isDeleted = true, ih.updatedAt = CURRENT_TIMESTAMP WHERE ih.id IN :ids")
-    void softDeleteByIds(@Param("ids") List<UUID> ids);
+    void softDeleteByIds(@Param("ids") List<Long> ids);
 
     // 恢复软删除的记录
     @Query("UPDATE InferenceHistory ih SET ih.isDeleted = false, ih.updatedAt = CURRENT_TIMESTAMP WHERE ih.id = :id")
-    void restoreById(@Param("id") UUID id);
+    void restoreById(@Param("id") Long id);
 
     // 清理旧记录（物理删除超过指定天数的记录）
     @Query("DELETE FROM InferenceHistory ih WHERE ih.isDeleted = true AND ih.updatedAt < :cutoffDate")
     void cleanupOldRecords(@Param("cutoffDate") LocalDateTime cutoffDate);
+
+    // 根据创建时间查找记录（用于清理操作）
+    List<InferenceHistory> findByCreatedAtBeforeAndIsDeletedFalse(LocalDateTime cutoffDate);
+
+    // 根据状态和创建时间查找记录（用于清理操作）
+    List<InferenceHistory> findByStatusAndCreatedAtBeforeAndIsDeletedFalse(String status, LocalDateTime cutoffDate);
+
+    @Query("SELECT DATE(ih.createdAt) as date, COUNT(ih) as count " +
+           "FROM InferenceHistory ih " +
+           "WHERE (:userId IS NULL OR ih.userId = :userId) " +
+           "AND ih.createdAt BETWEEN :startTime AND :endTime " +
+           "AND ih.isDeleted = false " +
+           "GROUP BY DATE(ih.createdAt) " +
+           "ORDER BY DATE(ih.createdAt)")
+    List<Object[]> getDailyInferenceStats(@Param("userId") Long userId, 
+                                         @Param("startTime") LocalDateTime startTime, 
+                                         @Param("endTime") LocalDateTime endTime);
+
+    @Query("SELECT ih.modelName, COUNT(ih) as count " +
+           "FROM InferenceHistory ih " +
+           "WHERE (:userId IS NULL OR ih.userId = :userId) " +
+           "AND ih.createdAt BETWEEN :startTime AND :endTime " +
+           "AND ih.isDeleted = false " +
+           "GROUP BY ih.modelName " +
+           "ORDER BY COUNT(ih) DESC")
+    List<Object[]> getModelUsageStats(@Param("userId") Long userId, 
+                                     @Param("startTime") LocalDateTime startTime, 
+                                     @Param("endTime") LocalDateTime endTime);
+
+    @Query("SELECT ih.inferenceType, COUNT(ih) as count " +
+           "FROM InferenceHistory ih " +
+           "WHERE (:userId IS NULL OR ih.userId = :userId) " +
+           "AND ih.createdAt BETWEEN :startTime AND :endTime " +
+           "AND ih.isDeleted = false " +
+           "GROUP BY ih.inferenceType " +
+           "ORDER BY COUNT(ih) DESC")
+    List<Object[]> getTypeUsageStats(@Param("userId") Long userId, 
+                                    @Param("startTime") LocalDateTime startTime, 
+                                    @Param("endTime") LocalDateTime endTime);
 }

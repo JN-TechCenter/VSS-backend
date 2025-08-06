@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -43,7 +42,7 @@ public class InferenceHistoryService {
                     .originalFilename(request.getOriginalFilename())
                     .fileSize(request.getFileSize())
                     .imagePath(request.getImagePath())
-                    .inferenceResult(request.getInferenceResult())
+                    .inferenceResult(request.getInferenceResult() != null ? request.getInferenceResult().toString() : null)
                     .detectedObjectsCount(request.getDetectedObjectsCount())
                     .processingTime(request.getProcessingTime())
                     .status(request.getStatus())
@@ -73,7 +72,7 @@ public class InferenceHistoryService {
     /**
      * 根据ID获取推理历史记录
      */
-    public Optional<InferenceHistoryDto.InferenceHistoryResponse> getInferenceHistoryById(UUID id) {
+    public Optional<InferenceHistoryDto.InferenceHistoryResponse> getInferenceHistoryById(Long id) {
         return inferenceHistoryRepository.findByIdAndIsDeletedFalse(id)
                 .map(this::convertToResponse);
     }
@@ -150,7 +149,7 @@ public class InferenceHistoryService {
      */
     @Transactional
     public InferenceHistoryDto.InferenceHistoryResponse updateInferenceHistory(
-            UUID id, InferenceHistoryDto.UpdateInferenceHistoryRequest request) {
+            Long id, InferenceHistoryDto.UpdateInferenceHistoryRequest request) {
         try {
             InferenceHistory history = inferenceHistoryRepository.findByIdAndIsDeletedFalse(id)
                     .orElseThrow(() -> new RuntimeException("推理历史记录不存在: " + id));
@@ -163,7 +162,7 @@ public class InferenceHistoryService {
                 history.setErrorMessage(request.getErrorMessage());
             }
             if (request.getInferenceResult() != null) {
-                history.setInferenceResult(request.getInferenceResult());
+                history.setInferenceResult(request.getInferenceResult().toString());
             }
             if (request.getDetectedObjectsCount() != null) {
                 history.setDetectedObjectsCount(request.getDetectedObjectsCount());
@@ -200,7 +199,7 @@ public class InferenceHistoryService {
      * 软删除推理历史记录
      */
     @Transactional
-    public void deleteInferenceHistory(UUID id) {
+    public void deleteInferenceHistory(Long id) {
         try {
             InferenceHistory history = inferenceHistoryRepository.findByIdAndIsDeletedFalse(id)
                     .orElseThrow(() -> new RuntimeException("推理历史记录不存在: " + id));
@@ -218,10 +217,10 @@ public class InferenceHistoryService {
     }
 
     /**
-     * 批量删除推理历史记录
+     * 批量软删除推理历史记录
      */
     @Transactional
-    public void batchDeleteInferenceHistory(List<UUID> ids) {
+    public void batchDeleteInferenceHistory(List<Long> ids) {
         try {
             List<InferenceHistory> histories = inferenceHistoryRepository.findByIdInAndIsDeletedFalse(ids);
             
@@ -243,7 +242,7 @@ public class InferenceHistoryService {
      * 获取推理历史统计信息
      */
     public InferenceHistoryDto.InferenceHistoryStats getInferenceHistoryStats(
-            UUID userId, LocalDateTime startTime, LocalDateTime endTime) {
+            Long userId, LocalDateTime startTime, LocalDateTime endTime) {
         try {
             // 基础统计
             Long totalInferences = inferenceHistoryRepository.countTotalInferences(userId, startTime, endTime);
@@ -277,14 +276,28 @@ public class InferenceHistoryService {
             // 每日统计
             List<Object[]> dailyStats = inferenceHistoryRepository.getDailyInferenceStats(userId, startTime, endTime);
             List<InferenceHistoryDto.DailyStats> dailyStatsList = dailyStats.stream()
-                    .map(stat -> InferenceHistoryDto.DailyStats.builder()
-                            .date((LocalDateTime) stat[0])
-                            .inferenceCount((Long) stat[1])
-                            .build())
+                    .map(stat -> {
+                        // 处理日期类型转换
+                        Object dateObj = stat[0];
+                        LocalDateTime date;
+                        if (dateObj instanceof java.sql.Date) {
+                            date = ((java.sql.Date) dateObj).toLocalDate().atStartOfDay();
+                        } else if (dateObj instanceof LocalDateTime) {
+                            date = (LocalDateTime) dateObj;
+                        } else {
+                            date = LocalDateTime.now(); // 默认值
+                        }
+                        
+                        return InferenceHistoryDto.DailyStats.builder()
+                                .date(date)
+                                .inferenceCount((Long) stat[1])
+                                .build();
+                    })
                     .collect(Collectors.toList());
 
             // 最近推理记录
-            List<InferenceHistory> recentHistories = inferenceHistoryRepository.findRecentInferences(userId, 10);
+            Pageable recentPageable = PageRequest.of(0, 10);
+            List<InferenceHistory> recentHistories = inferenceHistoryRepository.findRecentInferences(recentPageable);
             List<InferenceHistoryDto.InferenceHistoryResponse> recentInferences = recentHistories.stream()
                     .map(this::convertToResponse)
                     .collect(Collectors.toList());
@@ -319,16 +332,36 @@ public class InferenceHistoryService {
             if (request.getPhysicalDelete()) {
                 // 物理删除
                 if (request.getOnlyDeleteFailed()) {
-                    inferenceHistoryRepository.deleteFailedInferencesBeforeDate(cutoffDate);
+                    // 只删除失败的记录
+                    List<InferenceHistory> failedRecords = inferenceHistoryRepository
+                        .findByStatusAndCreatedAtBeforeAndIsDeletedFalse("FAILED", cutoffDate);
+                    inferenceHistoryRepository.deleteAll(failedRecords);
                 } else {
-                    inferenceHistoryRepository.deleteInferencesBeforeDate(cutoffDate);
+                    // 删除所有记录
+                    List<InferenceHistory> recordsToDelete = inferenceHistoryRepository
+                        .findByCreatedAtBeforeAndIsDeletedFalse(cutoffDate);
+                    inferenceHistoryRepository.deleteAll(recordsToDelete);
                 }
             } else {
                 // 软删除
                 if (request.getOnlyDeleteFailed()) {
-                    inferenceHistoryRepository.softDeleteFailedInferencesBeforeDate(cutoffDate);
+                    // 只软删除失败的记录
+                    List<InferenceHistory> failedRecords = inferenceHistoryRepository
+                        .findByStatusAndCreatedAtBeforeAndIsDeletedFalse("FAILED", cutoffDate);
+                    failedRecords.forEach(record -> {
+                        record.setIsDeleted(true);
+                        record.setUpdatedAt(LocalDateTime.now());
+                    });
+                    inferenceHistoryRepository.saveAll(failedRecords);
                 } else {
-                    inferenceHistoryRepository.softDeleteInferencesBeforeDate(cutoffDate);
+                    // 软删除所有记录
+                    List<InferenceHistory> recordsToDelete = inferenceHistoryRepository
+                        .findByCreatedAtBeforeAndIsDeletedFalse(cutoffDate);
+                    recordsToDelete.forEach(record -> {
+                        record.setIsDeleted(true);
+                        record.setUpdatedAt(LocalDateTime.now());
+                    });
+                    inferenceHistoryRepository.saveAll(recordsToDelete);
                 }
             }
             
