@@ -2,8 +2,9 @@ package com.vision.vision_platform_backend.controller;
 
 import com.vision.vision_platform_backend.service.InferenceHistoryService;
 import com.vision.vision_platform_backend.dto.InferenceHistoryDto;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,12 +18,16 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/inference-history")
-@RequiredArgsConstructor
 @Slf4j
 @CrossOrigin(origins = "*")
 public class InferenceHistoryController {
 
+    private static final Logger log = LoggerFactory.getLogger(InferenceHistoryController.class);
     private final InferenceHistoryService inferenceHistoryService;
+
+    public InferenceHistoryController(InferenceHistoryService inferenceHistoryService) {
+        this.inferenceHistoryService = inferenceHistoryService;
+    }
 
     /**
      * 创建推理历史记录

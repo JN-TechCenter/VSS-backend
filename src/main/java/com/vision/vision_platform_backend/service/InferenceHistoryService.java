@@ -3,8 +3,9 @@ package com.vision.vision_platform_backend.service;
 import com.vision.vision_platform_backend.entity.InferenceHistory;
 import com.vision.vision_platform_backend.repository.InferenceHistoryRepository;
 import com.vision.vision_platform_backend.dto.InferenceHistoryDto;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,11 +22,15 @@ import java.util.stream.Collectors;
  * 推理历史记录服务类
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class InferenceHistoryService {
 
+    private static final Logger log = LoggerFactory.getLogger(InferenceHistoryService.class);
     private final InferenceHistoryRepository inferenceHistoryRepository;
+
+    public InferenceHistoryService(InferenceHistoryRepository inferenceHistoryRepository) {
+        this.inferenceHistoryRepository = inferenceHistoryRepository;
+    }
 
     /**
      * 创建推理历史记录

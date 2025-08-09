@@ -52,6 +52,8 @@ public class InferenceHistoryDto {
         private String notes;
         private Integer resultRating;
         private Boolean isFavorite;
+
+
     }
 
     /**
@@ -80,6 +82,8 @@ public class InferenceHistoryDto {
         private String inferenceServer;
         private String tags;
         private String notes;
+
+
     }
 
     /**
@@ -99,6 +103,8 @@ public class InferenceHistoryDto {
         private String notes;
         private Integer resultRating;
         private Boolean isFavorite;
+
+
     }
 
     /**
@@ -131,6 +137,8 @@ public class InferenceHistoryDto {
         private Integer size = 20;
         private String sortBy = "createdAt";
         private String sortDirection = "desc";
+
+
     }
 
     /**
@@ -149,6 +157,8 @@ public class InferenceHistoryDto {
         private Boolean first;
         private Boolean last;
         private Boolean empty;
+
+
     }
 
     /**
@@ -171,6 +181,8 @@ public class InferenceHistoryDto {
         private List<InferenceHistoryResponse> recentInferences;
         private List<InferenceHistoryResponse> slowestInferences;
         private List<InferenceHistoryResponse> mostDetectedInferences;
+
+
     }
 
     /**
@@ -184,6 +196,8 @@ public class InferenceHistoryDto {
         private String modelName;
         private Long usageCount;
         private Double usagePercentage;
+
+
     }
 
     /**
@@ -197,6 +211,8 @@ public class InferenceHistoryDto {
         private String inferenceType;
         private Long usageCount;
         private Double usagePercentage;
+
+
     }
 
     /**
@@ -210,6 +226,8 @@ public class InferenceHistoryDto {
         @JsonFormat(pattern = "yyyy-MM-dd")
         private LocalDateTime date;
         private Long inferenceCount;
+
+
     }
 
     /**
@@ -224,6 +242,8 @@ public class InferenceHistoryDto {
         private String operation; // delete, favorite, unfavorite, rate
         private Integer rating; // 用于批量评分
         private String tags; // 用于批量添加标签
+
+
     }
 
     /**
@@ -264,6 +284,8 @@ public class InferenceHistoryDto {
         private Integer daysToKeep; // 保留多少天的记录
         private Boolean onlyDeleteFailed; // 是否只删除失败的记录
         private Boolean physicalDelete; // 是否物理删除（否则软删除）
+
+
     }
 
     /**
